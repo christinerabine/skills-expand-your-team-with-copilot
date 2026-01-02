@@ -597,6 +597,28 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      <div class="share-buttons">
+        <button class="share-button facebook tooltip" data-activity="${name}" data-platform="facebook">
+          <span class="share-icon">📘</span>
+          <span class="tooltip-text">Share on Facebook</span>
+        </button>
+        <button class="share-button twitter tooltip" data-activity="${name}" data-platform="twitter">
+          <span class="share-icon">🐦</span>
+          <span class="tooltip-text">Share on X (Twitter)</span>
+        </button>
+        <button class="share-button linkedin tooltip" data-activity="${name}" data-platform="linkedin">
+          <span class="share-icon">💼</span>
+          <span class="tooltip-text">Share on LinkedIn</span>
+        </button>
+        <button class="share-button email tooltip" data-activity="${name}" data-platform="email">
+          <span class="share-icon">✉️</span>
+          <span class="tooltip-text">Share via Email</span>
+        </button>
+        <button class="share-button copy tooltip" data-activity="${name}" data-platform="copy">
+          <span class="share-icon">🔗</span>
+          <span class="tooltip-text">Copy Link</span>
+        </button>
+      </div>
       <div class="activity-card-actions">
         ${
           currentUser
@@ -631,6 +653,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    // Add click handlers for share buttons
+    const shareButtons = activityCard.querySelectorAll(".share-button");
+    shareButtons.forEach((button) => {
+      button.addEventListener("click", (e) => {
+        const activityName = button.dataset.activity;
+        const platform = button.dataset.platform;
+        handleShare(activityName, details, platform);
+      });
+    });
 
     activitiesList.appendChild(activityCard);
   }
@@ -842,6 +874,83 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     );
+  }
+
+  // Handle social sharing
+  function handleShare(activityName, activityDetails, platform) {
+    // Create share URL (in production, this would be the actual page URL with activity parameter)
+    const baseUrl = window.location.origin;
+    const shareUrl = `${baseUrl}/static/index.html`;
+    
+    // Create share text
+    const shareText = `Check out this activity at Mergington High School: ${activityName} - ${activityDetails.description}`;
+    const shareTitle = `${activityName} - Mergington High School`;
+    
+    switch (platform) {
+      case 'facebook':
+        // Facebook share dialog
+        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+        window.open(facebookUrl, '_blank', 'width=600,height=400');
+        break;
+        
+      case 'twitter':
+        // X (Twitter) share dialog
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+        window.open(twitterUrl, '_blank', 'width=600,height=400');
+        break;
+        
+      case 'linkedin':
+        // LinkedIn share dialog
+        const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+        window.open(linkedinUrl, '_blank', 'width=600,height=400');
+        break;
+        
+      case 'email':
+        // Email sharing
+        const emailSubject = encodeURIComponent(shareTitle);
+        const emailBody = encodeURIComponent(`${shareText}\n\nSchedule: ${formatSchedule(activityDetails)}\n\nView more at: ${shareUrl}`);
+        window.location.href = `mailto:?subject=${emailSubject}&body=${emailBody}`;
+        break;
+        
+      case 'copy':
+        // Copy link to clipboard
+        const textToCopy = `${shareText}\n\nSchedule: ${formatSchedule(activityDetails)}\n\nView more at: ${shareUrl}`;
+        
+        // Modern clipboard API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(textToCopy)
+            .then(() => {
+              showMessage('Link copied to clipboard!', 'success');
+            })
+            .catch(() => {
+              // Fallback for older browsers
+              copyToClipboardFallback(textToCopy);
+            });
+        } else {
+          // Fallback for older browsers
+          copyToClipboardFallback(textToCopy);
+        }
+        break;
+    }
+  }
+
+  // Fallback method for copying to clipboard in older browsers
+  function copyToClipboardFallback(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      showMessage('Link copied to clipboard!', 'success');
+    } catch (err) {
+      showMessage('Failed to copy link. Please try again.', 'error');
+    }
+    
+    document.body.removeChild(textArea);
   }
 
   // Show message function
