@@ -3,16 +3,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const darkModeToggle = document.getElementById("dark-mode-toggle");
   const themeIcon = document.getElementById("theme-icon");
   
-  // Check for saved dark mode preference
+  // Update theme icon based on dark mode state
+  function updateThemeIcon(isDarkMode) {
+    themeIcon.textContent = isDarkMode ? "☀️" : "🌙";
+  }
+  
+  // Check for saved dark mode preference or system preference
   function checkDarkModePreference() {
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
+    let isDarkMode;
+    
+    if (savedTheme !== null) {
+      // Use saved preference if available
+      isDarkMode = savedTheme === "dark";
+    } else {
+      // Fallback to system preference
+      isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    
+    if (isDarkMode) {
       document.body.classList.add("dark-mode");
-      themeIcon.textContent = "☀️";
     } else {
       document.body.classList.remove("dark-mode");
-      themeIcon.textContent = "🌙";
     }
+    updateThemeIcon(isDarkMode);
   }
   
   // Toggle dark mode
@@ -20,13 +34,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.toggle("dark-mode");
     const isDarkMode = document.body.classList.contains("dark-mode");
     
-    if (isDarkMode) {
-      themeIcon.textContent = "☀️";
-      localStorage.setItem("theme", "dark");
-    } else {
-      themeIcon.textContent = "🌙";
-      localStorage.setItem("theme", "light");
-    }
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+    updateThemeIcon(isDarkMode);
   }
   
   // Initialize dark mode on page load
